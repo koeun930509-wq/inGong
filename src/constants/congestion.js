@@ -20,3 +20,16 @@ export const GATE_COUNT_BY_TERMINAL = { T1: 6, T2: 2 }
 
 // PRD §6.6: 혼잡도(인원수)가 이 값 이상이면 "혼잡" 강조 표시.
 export const HIGH_CONGESTION_THRESHOLD = 100
+
+// 'HH_HH' 슬롯(예: '20_21') -> 'HH:00 ~ HH:00' 표시용 라벨
+export function formatTimeSlotLabel(slot) {
+  const [from, to] = slot.split('_')
+  return `${from}:00 ~ ${to}:00`
+}
+
+// target_date('YYYY-MM-DD') + target_time('HH_HH') 슬롯의 종료 시각이 이미 지났는지 판단한다.
+export function isPastTimeSlot(targetDate, targetTime) {
+  const [, to] = targetTime.split('_')
+  const slotEnd = new Date(`${targetDate}T${to === '00' ? '23:59:59' : `${to}:00:00`}`)
+  return slotEnd < new Date()
+}

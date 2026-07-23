@@ -8,6 +8,7 @@ import {
   CartesianGrid,
   ResponsiveContainer,
 } from 'recharts'
+import { formatTimeSlotLabel } from '../constants/congestion'
 
 // rows(선택한 날짜의 전체 시간대 행) -> [{ time, 'T1 입국장': value, 'T1 출국장': value, ... }, ...] 형태로 변환한다.
 function buildTrendChartData(rows) {
@@ -36,9 +37,10 @@ export default function TerminalTrendChart({ rows }) {
         <ResponsiveContainer>
           <LineChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-            <XAxis dataKey="time" stroke="var(--muted)" />
+            <XAxis dataKey="time" tickFormatter={formatTimeSlotLabel} stroke="var(--muted)" />
             <YAxis stroke="var(--muted)" />
             <Tooltip
+              labelFormatter={formatTimeSlotLabel}
               contentStyle={{
                 background: 'var(--surface)',
                 border: '1px solid var(--border)',

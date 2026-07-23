@@ -1,4 +1,4 @@
-import { HIGH_CONGESTION_THRESHOLD } from '../constants/congestion'
+import { HIGH_CONGESTION_THRESHOLD, formatTimeSlotLabel } from '../constants/congestion'
 
 // rows(현재 로딩된 탭의 혼잡도)에서 즐겨찾기와 동일한 날짜·시간·터미널·구역 행을 찾는다.
 // 다른 탭(날짜)의 즐겨찾기는 그 탭을 봐야 판단할 수 있다.
@@ -70,7 +70,7 @@ export default function FavoritesList({
               >
                 {isFavoriteCongested(fav, rows) && '🔥 '}
                 {fav.label ? `${fav.label} · ` : ''}
-                {fav.target_date} {fav.target_time} · {fav.terminal} {fav.zone}
+                {fav.target_date} {formatTimeSlotLabel(fav.target_time)} · {fav.terminal} {fav.zone}
               </button>
               <button onClick={() => onDeleteFavorite(fav.id)}>삭제</button>
             </li>

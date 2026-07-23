@@ -1,10 +1,10 @@
-import { HIGH_CONGESTION_THRESHOLD } from '../constants/congestion'
+import { HIGH_CONGESTION_THRESHOLD, formatTimeSlotLabel } from '../constants/congestion'
 
-export default function CongestionDetailCard({ date, time, detailRows, loading, user, onAddFavorite }) {
+export default function CongestionDetailCard({ date, time, isLive, detailRows, loading, user, onAddFavorite }) {
   return (
     <section className="card" style={{ marginBottom: 20 }}>
       <h2 style={{ fontSize: 16, marginTop: 0 }}>
-        {date === 'tomorrow' ? '내일' : '오늘'} {time} 상세 혼잡도
+        {date === 'tomorrow' ? '내일' : '오늘'} {isLive ? `실시간(${formatTimeSlotLabel(time)})` : formatTimeSlotLabel(time)} 상세 혼잡도
       </h2>
 
       {loading ? (

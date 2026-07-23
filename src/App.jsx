@@ -6,7 +6,7 @@ import TerminalComparisonChart from './components/TerminalComparisonChart'
 import TerminalTrendChart from './components/TerminalTrendChart'
 import LoginButton from './components/LoginButton'
 import FavoritesList from './components/FavoritesList'
-import { TIME_SLOTS } from './constants/congestion'
+import { TIME_SLOTS, isPastTimeSlot } from './constants/congestion'
 import {
   fetchCongestionByDate,
   getCongestionDetail,
@@ -26,9 +26,14 @@ function getInitialDarkMode() {
   return window.matchMedia('(prefers-color-scheme: dark)').matches
 }
 
+function getCurrentTimeSlot() {
+  const hour = new Date().getHours()
+  return TIME_SLOTS[hour]
+}
+
 export default function App() {
   const [selectedDate, setSelectedDate] = useState('today')
-  const [selectedTime, setSelectedTime] = useState(TIME_SLOTS[0])
+  const [selectedTime, setSelectedTime] = useState(getCurrentTimeSlot)
   const [rows, setRows] = useState([])
   const [darkMode, setDarkMode] = useState(getInitialDarkMode)
   const [user, setUser] = useState(null)
@@ -75,11 +80,19 @@ export default function App() {
     }
     setFavoritesError(null)
     listFavorites(user.id)
-      .then(setFavorites)
+      .then(async (loaded) => {
+        const past = loaded.filter((fav) => isPastTimeSlot(fav.target_date, fav.target_time))
+        const current = loaded.filter((fav) => !isPastTimeSlot(fav.target_date, fav.target_time))
+        setFavorites(current)
+        if (past.length > 0) {
+          await Promise.all(past.map((fav) => deleteFavorite(fav.id).catch(() => {})))
+        }
+      })
       .catch((err) => setFavoritesError(err.message))
   }, [user])
 
   const detailRows = getCongestionDetail(rows, selectedTime)
+  const isLive = selectedDate === 'today' && selectedTime === getCurrentTimeSlot()
 
   function handleRefresh(date) {
     setSelectedDate(date)
@@ -188,6 +201,7 @@ export default function App() {
         <CongestionDetailCard
           date={selectedDate}
           time={selectedTime}
+          isLive={isLive}
           detailRows={detailRows}
           loading={congestionLoading}
           user={user}
