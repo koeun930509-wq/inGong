@@ -1,0 +1,20 @@
+node_modules
+dist
+dist-ssr
+*.local
+
+.env
+.env.local
+.env.*.local
+
+# Supabase 액세스 토큰 등 비밀값이 들어가는 MCP 서버 설정
+.mcp.json
+
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
