@@ -44,42 +44,46 @@ export default function TerminalTrendChart({ rows }) {
         <h2 style={{ fontSize: 16, margin: 0 }}>시간대별 혼잡도 추이</h2>
         <TerminalToggle value={selectedTerminal} onChange={setSelectedTerminal} />
       </div>
-      <div style={{ width: '100%', height: 300 }}>
-        <ResponsiveContainer>
-          <LineChart data={chartData} margin={{ top: 8, right: 8, bottom: 8, left: 0 }}>
-            <CartesianGrid vertical={false} stroke="var(--border)" />
-            <XAxis
-              dataKey="time"
-              tickFormatter={formatTimeSlotLabel}
-              stroke="var(--muted)"
-              tickLine={false}
-              axisLine={false}
-            />
-            <YAxis stroke="var(--muted)" tickLine={false} axisLine={false} />
-            <Tooltip
-              labelFormatter={formatTimeSlotLabel}
-              contentStyle={{
-                background: 'var(--surface)',
-                border: '1px solid var(--border)',
-                borderRadius: 8,
-              }}
-              labelStyle={{ color: 'var(--text)' }}
-              itemStyle={{ color: 'var(--text)' }}
-            />
-            <Legend wrapperStyle={{ color: 'var(--text)', paddingTop: 16 }} />
-            {series.map(({ key, color }) => (
-              <Line
-                key={key}
-                type="monotone"
-                dataKey={key}
-                stroke={color}
-                strokeWidth={2.5}
-                dot={false}
-                activeDot={{ r: 5, strokeWidth: 2, stroke: 'var(--surface)' }}
+      <div style={{ width: '100%', overflowX: 'auto' }}>
+        <div style={{ width: '100%', minWidth: 640, height: 300 }}>
+          <ResponsiveContainer>
+            <LineChart data={chartData} margin={{ top: 8, right: 8, bottom: 8, left: 0 }}>
+              <CartesianGrid vertical={false} stroke="var(--border)" />
+              <XAxis
+                dataKey="time"
+                tickFormatter={formatTimeSlotLabel}
+                stroke="var(--muted)"
+                tickLine={false}
+                axisLine={false}
+                tick={{ fontSize: 11 }}
               />
-            ))}
-          </LineChart>
-        </ResponsiveContainer>
+              <YAxis stroke="var(--muted)" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
+              <Tooltip
+                labelFormatter={formatTimeSlotLabel}
+                contentStyle={{
+                  background: 'var(--surface)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 8,
+                  fontSize: 12,
+                }}
+                labelStyle={{ color: 'var(--text)' }}
+                itemStyle={{ color: 'var(--text)' }}
+              />
+              <Legend wrapperStyle={{ color: 'var(--text)', paddingTop: 16, fontSize: 12 }} />
+              {series.map(({ key, color }) => (
+                <Line
+                  key={key}
+                  type="monotone"
+                  dataKey={key}
+                  stroke={color}
+                  strokeWidth={2.5}
+                  dot={false}
+                  activeDot={{ r: 5, strokeWidth: 2, stroke: 'var(--surface)' }}
+                />
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
       </div>
       <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 0 }}>
         선택한 날짜·터미널의 시간대별(<code>time</code>) 구역(입국장/출국장) <code>value</code>(인원수, 명) 변화를 보여줍니다.
