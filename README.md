@@ -32,6 +32,8 @@
 - Supabase Auth 이메일/비밀번호 회원가입·로그인·로그아웃 (비로그인 사용자도 혼잡도 조회는 그대로 가능)
 - 로그인 사용자 전용 즐겨찾기: 상세 카드에서 항목별로 추가, 목록에서 클릭 시 해당 날짜/시간으로 이동, 삭제
   - 즐겨찾기 시간대가 현재 로딩된 탭 기준으로 혼잡 기준치를 넘으면 목록에 🔥 표시
+- 인천공항 실시간 날씨 표시(OpenWeatherMap, 공항 좌표 고정)
+- 주차장 현황 카드: 터미널(T1/T2) 토글로 층별 주차 대수 / 전체 면수 실시간 조회, 미운영 층 구분 표시
 
 ## 외부 API 연동 (`getPassgrAnncmt`)
 
@@ -42,6 +44,19 @@
   - `value`는 인원수(raw headcount) — 등급/점수 없음
   - 출국장 행에는 게이트별(`t1dg1~6`/`t2dg1~2`) 세부 `gates` 배열 포함
   - 응답의 합계(총계) 행은 `atime === '합계'`로 필터링해서 제외
+
+## 주차 현황 연동 (`getTrackingParking`)
+
+- 서비스: 공공데이터포털 "인천국제공항공사_주차 현황 조회 서비스" (`B551177/StatusOfParking`)
+- `src/services/statusOfParkingApi.js`: `getTrackingParking()` — 오퍼레이션명을 그대로 함수명으로 사용, `type=json` 호출, `resultCode`가 `00`이 아니면 에러 throw.
+- `src/services/parkingService.js`: `fetchParkingStatus()` — raw 응답(`floor`/`parking`/`parkingarea`/`datetm`)을 `{ floor, terminal, parking, parkingArea, operating, updatedAt }`로 변환.
+  - `floor`는 19종류 자유 텍스트(예: `'T1 단기주차장 지상층'`) — 별도 코드 매핑 없이 원문 그대로 표시하고, 앞 2글자로만 터미널(T1/T2) 구분
+  - `parking`(현재 주차 대수)이 0 이하이면 미운영으로 간주(활용가이드 V7.3에 음수 값 정의가 없어 미운영과 동일하게 처리)
+  - 1분 주기로 갱신되는 실시간 데이터
+
+## 날씨 연동 (OpenWeatherMap)
+
+- `src/services/weatherService.js`: `getIncheonAirportWeather()` — 인천공항 좌표(37.4602, 126.4407) 고정으로 Current Weather API 호출, 섭씨 기온/날씨 설명/아이콘 코드 반환.
 
 ## Supabase 데이터 모델
 
@@ -65,9 +80,10 @@ RLS 정책 3개(SELECT/INSERT/DELETE) 모두 `auth.uid() = user_id` 조건. 클�
 `.env.local`에 아래 값을 채웁니다 (`.env.example` 참고, 실제 값은 커밋하지 않음):
 
 ```
-VITE_AIRPORT_API_KEY=      # 공공데이터포털 서비스 키
-VITE_SUPABASE_URL=         # Supabase 프로젝트 URL
-VITE_SUPABASE_ANON_KEY=    # Supabase anon key (service role key는 절대 사용하지 않음)
+VITE_AIRPORT_API_KEY=       # 공공데이터포털 서비스 키 (혼잡도 + 주차 현황 공용)
+VITE_SUPABASE_URL=          # Supabase 프로젝트 URL
+VITE_SUPABASE_ANON_KEY=     # Supabase anon key (service role key는 절대 사용하지 않음)
+VITE_OPENWEATHER_API_KEY=   # OpenWeatherMap 날씨 API 키
 ```
 
 ## 실행
@@ -85,3 +101,11 @@ npm run lint      # ESLint
 - 공공데이터포털 API 키가 클라이언트 번들/네트워크 요청에 그대로 노출되는 구조입니다(의도된 설계, 서버 프록시 없음). 트래픽 한도에 유의해야 합니다.
 - Supabase 프로젝트의 `mailer_autoconfirm`이 켜져 있어 회원가입 시 이메일 인증 없이 즉시 로그인됩니다(개발 편의를 위한 설정).
 - 즐겨찾기의 🔥 표시는 현재 로딩된 날짜 탭(오늘 또는 내일) 기준으로만 판단합니다 — 반대쪽 탭의 즐겨찾기는 그 탭으로 전환해야 반영됩니다(API 호출량을 늘리지 않기 위한 선택).
+- 주차 현황 API는 혼잡도 API와 같은 공공데이터포털 서비스 키(`VITE_AIRPORT_API_KEY`)를 공유합니다.
+- 날씨 API 키가 없으면 날씨 표시만 비활성화되고, 나머지 기능(혼잡도/주차 현황/즐겨찾기)은 정상 동작합니다.
+
+## 참고 문서
+
+- [`PRD.md`](./PRD.md) — 제품 요구사항 문서
+- [`DESIGN.md`](./DESIGN.md) — 디자인 가이드
+- OpenAPI 활용가이드(공공데이터포털 원본 문서, 저장소 루트에 `.docx`로 보관): 출입국별 승객 예고 정보 조회서비스, 주차 현황 조회 서비스(V7.3)
