@@ -5,12 +5,33 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  Legend,
   CartesianGrid,
   ResponsiveContainer,
 } from 'recharts'
 import { formatTimeSlotLabel } from '../constants/congestion'
 import TerminalToggle from './TerminalToggle'
+
+function ChartLegend({ series }) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'center',
+        gap: 16,
+        paddingTop: 16,
+        fontSize: 12,
+        color: 'var(--text)',
+      }}
+    >
+      {series.map(({ key, color }) => (
+        <span key={key} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ width: 10, height: 10, borderRadius: '50%', background: color }} />
+          {key}
+        </span>
+      ))}
+    </div>
+  )
+}
 
 // rows(선택한 날짜의 전체 시간대 행) -> [{ time, 'T1 입국장': value, 'T1 출국장': value, ... }, ...] 형태로 변환한다.
 function buildTrendChartData(rows) {
@@ -40,14 +61,14 @@ export default function TerminalTrendChart({ rows }) {
 
   return (
     <section className="card" style={{ marginBottom: 20 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 24 }}>
         <h2 style={{ fontSize: 16, margin: 0 }}>시간대별 혼잡도 추이</h2>
         <TerminalToggle value={selectedTerminal} onChange={setSelectedTerminal} />
       </div>
       <div style={{ width: '100%', overflowX: 'auto' }}>
         <div style={{ width: '100%', minWidth: 640, height: 300 }}>
           <ResponsiveContainer>
-            <LineChart data={chartData} margin={{ top: 8, right: 8, bottom: 8, left: 0 }}>
+            <LineChart data={chartData} margin={{ top: 8, right: 8, bottom: 8, left: -8 }}>
               <CartesianGrid vertical={false} stroke="var(--border)" />
               <XAxis
                 dataKey="time"
@@ -57,7 +78,13 @@ export default function TerminalTrendChart({ rows }) {
                 axisLine={false}
                 tick={{ fontSize: 11 }}
               />
-              <YAxis stroke="var(--muted)" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
+              <YAxis
+                stroke="var(--muted)"
+                tickLine={false}
+                axisLine={false}
+                tick={{ fontSize: 11 }}
+                width={50}
+              />
               <Tooltip
                 labelFormatter={formatTimeSlotLabel}
                 contentStyle={{
@@ -69,7 +96,6 @@ export default function TerminalTrendChart({ rows }) {
                 labelStyle={{ color: 'var(--text)' }}
                 itemStyle={{ color: 'var(--text)' }}
               />
-              <Legend wrapperStyle={{ color: 'var(--text)', paddingTop: 16, fontSize: 12 }} />
               {series.map(({ key, color }) => (
                 <Line
                   key={key}
@@ -85,6 +111,7 @@ export default function TerminalTrendChart({ rows }) {
           </ResponsiveContainer>
         </div>
       </div>
+      <ChartLegend series={series} />
       <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 0 }}>
         선택한 날짜·터미널의 시간대별(<code>time</code>) 구역(입국장/출국장) <code>value</code>(인원수, 명) 변화를 보여줍니다.
       </p>

@@ -108,7 +108,7 @@ export default function CongestionDetailCard({
             position: 'relative',
             display: 'flex',
             width: 160,
-            padding: 4,
+            padding: '0 1px',
             borderRadius: 9999,
             background: 'var(--border)',
           }}
@@ -116,10 +116,10 @@ export default function CongestionDetailCard({
           <div
             style={{
               position: 'absolute',
-              top: 4,
-              bottom: 4,
-              left: date === 'today' ? 4 : '50%',
-              width: 'calc(50% - 4px)',
+              top: 0,
+              bottom: 0,
+              left: date === 'today' ? 1 : '50%',
+              width: 'calc(50% - 1px)',
               borderRadius: 9999,
               background: 'var(--accent)',
               transition: 'left 0.2s ease',
