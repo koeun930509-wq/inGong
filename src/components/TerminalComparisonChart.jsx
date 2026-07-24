@@ -27,9 +27,9 @@ export default function TerminalComparisonChart({ detailRows }) {
   return (
     <section className="card" style={{ marginBottom: 20 }}>
       <h2 style={{ fontSize: 16, marginTop: 0 }}>터미널별 비교 (T1 vs T2)</h2>
-      <div style={{ width: '100%', height: 260 }}>
+      <div style={{ width: '100%', height: 280 }}>
         <ResponsiveContainer>
-          <BarChart data={chartData}>
+          <BarChart data={chartData} margin={{ top: 8, right: 8, bottom: 8, left: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
             <XAxis dataKey="zone" stroke="var(--muted)" />
             <YAxis stroke="var(--muted)" />
@@ -42,7 +42,7 @@ export default function TerminalComparisonChart({ detailRows }) {
               labelStyle={{ color: 'var(--text)' }}
               itemStyle={{ color: 'var(--text)' }}
             />
-            <Legend wrapperStyle={{ color: 'var(--text)' }} />
+            <Legend wrapperStyle={{ color: 'var(--text)', paddingTop: 16 }} />
             <Bar dataKey="T1" fill="var(--chart-t1)" barSize={24} radius={[4, 4, 0, 0]} />
             <Bar dataKey="T2" fill="var(--chart-t2)" barSize={24} radius={[4, 4, 0, 0]} />
           </BarChart>

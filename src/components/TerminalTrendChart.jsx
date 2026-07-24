@@ -44,9 +44,9 @@ export default function TerminalTrendChart({ rows }) {
         <h2 style={{ fontSize: 16, margin: 0 }}>시간대별 혼잡도 추이</h2>
         <TerminalToggle value={selectedTerminal} onChange={setSelectedTerminal} />
       </div>
-      <div style={{ width: '100%', height: 280 }}>
+      <div style={{ width: '100%', height: 300 }}>
         <ResponsiveContainer>
-          <LineChart data={chartData}>
+          <LineChart data={chartData} margin={{ top: 8, right: 8, bottom: 8, left: 0 }}>
             <CartesianGrid vertical={false} stroke="var(--border)" />
             <XAxis
               dataKey="time"
@@ -66,7 +66,7 @@ export default function TerminalTrendChart({ rows }) {
               labelStyle={{ color: 'var(--text)' }}
               itemStyle={{ color: 'var(--text)' }}
             />
-            <Legend wrapperStyle={{ color: 'var(--text)' }} />
+            <Legend wrapperStyle={{ color: 'var(--text)', paddingTop: 16 }} />
             {series.map(({ key, color }) => (
               <Line
                 key={key}
