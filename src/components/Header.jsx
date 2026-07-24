@@ -7,17 +7,6 @@ function RefreshIcon() {
   )
 }
 
-function CalendarIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="4" width="18" height="18" rx="2" />
-      <line x1="16" y1="2" x2="16" y2="6" />
-      <line x1="8" y1="2" x2="8" y2="6" />
-      <line x1="3" y1="10" x2="21" y2="10" />
-    </svg>
-  )
-}
-
 function SunIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -82,7 +71,7 @@ export default function Header({ onRefresh, darkMode, onToggleDarkMode, user, on
         marginBottom: 20,
       }}
     >
-      <h1 style={{ fontSize: 20, margin: 0 }}>인천공항 혼잡도 대시보드</h1>
+      <h1 style={{ fontSize: 20, margin: 0 }}>인천공항 혼잡도</h1>
 
       <div style={{ display: 'flex', gap: 8 }}>
         <button
@@ -101,14 +90,6 @@ export default function Header({ onRefresh, darkMode, onToggleDarkMode, user, on
           style={iconButtonStyle}
         >
           <RefreshIcon />
-        </button>
-        <button
-          onClick={() => onRefresh('tomorrow')}
-          title="내일 새로고침"
-          aria-label="내일 새로고침"
-          style={iconButtonStyle}
-        >
-          <CalendarIcon />
         </button>
         <button
           onClick={onToggleDarkMode}

@@ -108,9 +108,3 @@ button[aria-pressed='true'] {
   }
 }
 
-@media (max-width: 480px) {
-  .app-header {
-    flex-direction: column-reverse;
-    align-items: flex-start;
-  }
-}
