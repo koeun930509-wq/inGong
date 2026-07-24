@@ -60,21 +60,22 @@
 ```
 [사용자 브라우저]
    ├─ React + Vite SPA (Vercel 정적 호스팅)
-   │     ├─ 공공데이터포털 혼잡도 API 직접 호출 (클라이언트 사이드 fetch)
-   │     │     └─ API 서비스 키는 .env(로컬) / Vercel 환경변수(배포)에서 주입
+   │     ├─ Supabase Edge Function 호출 (혼잡도 데이터 요청)
+   │     │     └─ Edge Function이 공공데이터포털 혼잡도 API를 서버 사이드에서 호출
+   │     │           └─ API 서비스 키는 Edge Function의 Secret으로 관리(브라우저에 노출되지 않음)
    │     └─ Supabase JS Client
    │           ├─ Supabase Auth (이메일/비밀번호 로그인)
    │           └─ Supabase Database (즐겨찾기 테이블, RLS 적용)
    │
-   └─ (백엔드 서버 없음 — 서버리스/BaaS 조합)
+   └─ (자체 백엔드 서버 없음 — Supabase Edge Function이 공공데이터 API 프록시 역할)
 ```
 
-- **원칙**: 별도의 자체 백엔드 서버를 두지 않는다.
-- 공공데이터 API 호출: 프론트엔드에서 직접 호출 (사용자 지시에 따름).
+- **원칙**: 별도의 자체 백엔드 서버를 두지 않는다. 다만 공공데이터 API 호출은 브라우저가 직접 하지 않고 Supabase Edge Function을 경유한다.
+- 공공데이터 API 호출: 브라우저 → Supabase Edge Function → 공공데이터포털 API. Edge Function이 응답을 받아 프론트엔드에 반환한다.
 - 즐겨찾기 데이터: Supabase Database에 저장하고 RLS로 사용자별 접근을 제한한다.
 - 인증: Supabase Auth.
 
-> ⚠️ 이 구조는 API 키가 브라우저 번들/네트워크 요청에 그대로 노출되는 것을 전제로 한다. 관련 리스크와 대응 방안은 11장 참고.
+> ✅ 공공데이터 API 키는 더 이상 브라우저 번들/네트워크 요청에 노출되지 않는다. 키는 Edge Function Secret으로만 관리되며, 브라우저는 Edge Function 엔드포인트만 호출한다. 자세한 내용은 11장 참고.
 
 ---
 
@@ -136,7 +137,7 @@
 |---|---|
 | 데이터 출처 | 공공데이터포털 "인천공항 여객 혼잡도(예측)" API |
 | 인증 방식 | 서비스 키(Service Key) 쿼리 파라미터 방식 (공공데이터포털 발급) |
-| 호출 위치 | 프론트엔드(브라우저)에서 직접 fetch/axios 호출 |
+| 호출 위치 | Supabase Edge Function에서 서버 사이드로 호출 (브라우저는 Edge Function만 호출, 공공데이터 API를 직접 호출하지 않음) |
 | 제공 범위 | 오늘/내일 예측 데이터로 파악 (정확한 제공 범위·갱신 주기는 **API 문서 재확인 필요**, 13장 참고) |
 | 응답 형식 | XML/JSON (공공데이터포털 API 특성상 XML 기본 제공, JSON 파라미터 지원 여부 확인 필요) |
 
@@ -177,11 +178,12 @@
 
 | 변수명(예시) | 용도 | 관리 위치 |
 |---|---|---|
-| `VITE_AIRPORT_API_KEY` | 공공데이터포털 서비스 키 | `.env.local`(로컬), Vercel Environment Variables(배포) |
-| `VITE_SUPABASE_URL` | Supabase 프로젝트 URL | 동일 |
+| `AIRPORT_API_KEY` | 공공데이터포털 서비스 키 | Supabase Edge Function Secret (`supabase secrets set`) — 프론트엔드 `.env`/Vercel 환경변수에는 두지 않는다 |
+| `VITE_SUPABASE_URL` | Supabase 프로젝트 URL | `.env.local`(로컬), Vercel Environment Variables(배포) |
 | `VITE_SUPABASE_ANON_KEY` | Supabase 익명(anon) 키 | 동일 |
 
-- Vite 프로젝트 기준 클라이언트에 노출되는 환경변수는 `VITE_` 접두사를 사용한다(빌드 시 번들에 포함됨을 인지).
+- 공공데이터 API 키는 더 이상 `VITE_` 접두사 환경변수로 프론트엔드 번들에 포함되지 않는다. Edge Function의 Secret으로만 관리되어 브라우저에 노출되지 않는다.
+- Vite 프로젝트 기준 클라이언트에 노출되는 환경변수(Supabase URL/anon key)는 `VITE_` 접두사를 사용한다(빌드 시 번들에 포함됨을 인지).
 - `.env` 파일은 `.gitignore`에 포함하여 저장소에 커밋하지 않는다. `.env.example`을 제공해 필요한 변수 목록만 공유한다.
 - Vercel 배포 시 Production/Preview/Development 환경별로 값을 등록한다.
 - Supabase의 **service role key는 절대 프론트엔드/환경변수로 클라이언트에 내려주지 않는다** (RLS 우회 가능한 키이므로).
@@ -190,10 +192,9 @@
 
 ## 11. 보안 고려사항
 
-- **공공데이터 API 키 노출**: 요구사항에 따라 API 키를 프론트엔드에서 직접 사용하며, 이는 브라우저 네트워크 탭/번들에서 키가 노출됨을 의미한다.
-  - 리스크: 제3자가 키를 추출해 자신의 애플리케이션에서 재사용하거나, 트래픽 제한(쿼터)을 소진시킬 수 있음.
-  - 완화 방안(선택적, 필요 시 적용): 공공데이터포털에서 도메인 제한/트래픽 제한 옵션 지원 여부 확인, 키 사용량 모니터링, 필요 시 이후 단계에서 서버리스 프록시로 전환 검토.
-  - 본 프로젝트 범위에서는 위 리스크를 인지하고 감수하는 것으로 결정됨(사용자 확인 완료).
+- **공공데이터 API 키 비노출**: API 키는 Supabase Edge Function의 Secret으로만 관리되며, 브라우저 네트워크 탭/번들에는 노출되지 않는다. 브라우저는 Edge Function 엔드포인트만 호출하고, 공공데이터포털 API 호출은 Edge Function이 서버 사이드에서 수행한다.
+  - 이전에는 프론트엔드 직접 호출로 인한 키 노출을 감수하기로 결정했으나, 서버 사이드 프록시(Edge Function) 구조로 전환하며 해당 결정은 폐기되었다.
+  - 잔여 리스크: Edge Function 엔드포인트 자체에 대한 과도한 호출(트래픽 소진)은 여전히 가능하므로, 필요 시 Edge Function 단에서 요청 빈도 제한(rate limit) 적용을 검토한다.
 - **Supabase RLS**: 즐겨찾기 등 사용자 데이터는 RLS로 보호하며, anon key만 클라이언트에 배포한다.
 - **인증 정보**: 비밀번호는 Supabase Auth가 자체적으로 해시 처리(bcrypt 등)하여 별도 구현 불필요.
 - **HTTPS**: Vercel 배포 시 기본 제공되는 HTTPS를 사용한다.
@@ -218,7 +219,8 @@
 | 배포 | Vercel |
 | 차트 | Recharts |
 | 인증/DB | Supabase (Auth: 이메일/비밀번호, Database + RLS) |
-| 외부 데이터 | 공공데이터포털 인천공항 여객 혼잡도 API (프론트엔드 직접 호출) |
+| 서버리스 함수 | Supabase Edge Function (공공데이터 API 프록시) |
+| 외부 데이터 | 공공데이터포털 인천공항 여객 혼잡도 API (Supabase Edge Function을 통한 서버 사이드 호출) |
 
 ---
 
@@ -240,8 +242,7 @@
 ## 15. Out of Scope (범위 외)
 
 - 소셜 로그인(구글 등) — 이번 범위는 이메일/비밀번호만
-- 자체 백엔드 서버 구축
-- 공공데이터 API 키에 대한 서버 프록시(보안 강화) — 필요 시 차기 버전에서 검토
+- 자체 백엔드 서버 구축 (Supabase Edge Function으로 대체)
 - 다국어(i18n) 지원
 - 푸시/이메일 알림
 - 관리자(Admin) 페이지
@@ -260,7 +261,7 @@
 6. **다크모드 설정 저장 범위**: 다크모드 선택을 브라우저(localStorage)에만 저장할까요, 로그인 사용자는 Supabase에도 저장해 기기 간 동기화되게 할까요?
 7. **약관/개인정보처리방침**: 회원가입 시 이용약관 및 개인정보처리방침 동의 절차가 필요한가요? (실 서비스 오픈 시 법적 요건 검토 필요)
 8. **초기 화면 진입 시 위치 정보 사용 여부**: 터미널 기본값을 사용자가 직접 선택하게 할지, 아니면 기본값(T1)을 지정할지.
-9. **트래픽/쿼터 대응**: 공공데이터포털 API의 일일 호출 한도를 알고 계신가요? (프론트 직접 호출 특성상 사용자 수가 늘면 한도 초과 가능성 존재)
+9. **트래픽/쿼터 대응**: 공공데이터포털 API의 일일 호출 한도를 알고 계신가요? (Edge Function 경유로도 사용자 수가 늘면 한도 초과 가능성은 여전히 존재 — Edge Function 단 캐싱/rate limit 적용 여부 검토 필요)
 
 ---
 

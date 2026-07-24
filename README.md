@@ -80,11 +80,12 @@ RLS 정책 3개(SELECT/INSERT/DELETE) 모두 `auth.uid() = user_id` 조건. 클�
 `.env.local`에 아래 값을 채웁니다 (`.env.example` 참고, 실제 값은 커밋하지 않음):
 
 ```
-VITE_AIRPORT_API_KEY=       # 공공데이터포털 서비스 키 (혼잡도 + 주차 현황 공용)
 VITE_SUPABASE_URL=          # Supabase 프로젝트 URL
 VITE_SUPABASE_ANON_KEY=     # Supabase anon key (service role key는 절대 사용하지 않음)
 VITE_OPENWEATHER_API_KEY=   # OpenWeatherMap 날씨 API 키
 ```
+
+공공데이터포털 서비스 키(`AIRPORT_API_KEY`)는 더 이상 프론트엔드 `.env`에 두지 않습니다. Supabase Edge Function(`airport-proxy`, `parking-proxy`)의 Secret으로만 등록하며, `supabase secrets set AIRPORT_API_KEY=...` 또는 대시보드에서 관리합니다.
 
 ## 실행
 
@@ -98,10 +99,10 @@ npm run lint      # ESLint
 
 ## 알아둘 점
 
-- 공공데이터포털 API 키가 클라이언트 번들/네트워크 요청에 그대로 노출되는 구조입니다(의도된 설계, 서버 프록시 없음). 트래픽 한도에 유의해야 합니다.
+- 공공데이터포털 API는 브라우저가 직접 호출하지 않고 Supabase Edge Function(`airport-proxy`, `parking-proxy`)을 통해서만 호출합니다. 서비스 키는 Edge Function Secret으로만 존재하며 클라이언트 번들/네트워크 요청에 노출되지 않습니다.
 - Supabase 프로젝트의 `mailer_autoconfirm`이 켜져 있어 회원가입 시 이메일 인증 없이 즉시 로그인됩니다(개발 편의를 위한 설정).
 - 즐겨찾기의 🔥 표시는 현재 로딩된 날짜 탭(오늘 또는 내일) 기준으로만 판단합니다 — 반대쪽 탭의 즐겨찾기는 그 탭으로 전환해야 반영됩니다(API 호출량을 늘리지 않기 위한 선택).
-- 주차 현황 API는 혼잡도 API와 같은 공공데이터포털 서비스 키(`VITE_AIRPORT_API_KEY`)를 공유합니다.
+- 주차 현황 API(`parking-proxy`)는 혼잡도 API(`airport-proxy`)와 같은 Edge Function Secret(`AIRPORT_API_KEY`)을 공유합니다.
 - 날씨 API 키가 없으면 날씨 표시만 비활성화되고, 나머지 기능(혼잡도/주차 현황/즐겨찾기)은 정상 동작합니다.
 
 ## 참고 문서

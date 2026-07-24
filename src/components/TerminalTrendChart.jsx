@@ -65,7 +65,7 @@ export default function TerminalTrendChart({ rows }) {
         <h2 style={{ fontSize: 16, margin: 0 }}>시간대별 혼잡도 추이</h2>
         <TerminalToggle value={selectedTerminal} onChange={setSelectedTerminal} />
       </div>
-      <div style={{ width: '100%', overflowX: 'auto' }}>
+      <div style={{ width: '100%', overflowX: 'auto', overflowY: 'hidden' }}>
         <div style={{ width: '100%', minWidth: 640, height: 300 }}>
           <ResponsiveContainer>
             <LineChart data={chartData} margin={{ top: 8, right: 8, bottom: 8, left: -8 }}>
