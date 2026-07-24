@@ -76,12 +76,12 @@ export default function FavoritesList({
               <button
                 onClick={() => onDeleteFavorite(fav.id)}
                 style={{
-                  border: '1px solid var(--level-high)',
-                  background: 'color-mix(in srgb, var(--level-high) 12%, transparent)',
-                  color: 'var(--level-high)',
+                  border: '1px solid var(--muted)',
+                  background: 'var(--border)',
+                  color: 'var(--text)',
                   borderRadius: 4,
                   fontSize: 11,
-                  fontWeight: 700,
+                  fontWeight: 400,
                   padding: '5px 11px',
                 }}
               >
