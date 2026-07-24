@@ -23,15 +23,15 @@ export default function FavoritesList({
 }) {
   if (!user) {
     return (
-      <section className="card">
+      <section className="card" style={{ marginBottom: 20 }}>
         <h2 style={{ fontSize: 16, marginTop: 0 }}>즐겨찾기</h2>
-        <p style={{ color: 'var(--muted)' }}>로그인 후 즐겨찾기를 이용할 수 있습니다.</p>
+        <p style={{ color: 'var(--muted)', fontSize: 14 }}>로그인 후 즐겨찾기를 이용할 수 있습니다.</p>
       </section>
     )
   }
 
   return (
-    <section className="card">
+    <section className="card" style={{ marginBottom: 20 }}>
       <h2 style={{ fontSize: 16, marginTop: 0, marginBottom: 12 }}>내 즐겨찾기</h2>
 
       {favoritesError && (
@@ -64,15 +64,28 @@ export default function FavoritesList({
                   padding: 0,
                   textAlign: 'left',
                   color: 'var(--text)',
-                  textDecoration: 'underline',
+                  textDecoration: 'none',
                   cursor: 'pointer',
+                  fontWeight: 400,
                 }}
               >
                 {isFavoriteCongested(fav, rows) && '🔥 '}
                 {fav.label ? `${fav.label} · ` : ''}
                 {fav.target_date} {formatTimeSlotLabel(fav.target_time)} · {fav.terminal} {fav.zone}
               </button>
-              <button onClick={() => onDeleteFavorite(fav.id)}>삭제</button>
+              <button
+                onClick={() => onDeleteFavorite(fav.id)}
+                style={{
+                  border: 'none',
+                  background: '#eee',
+                  borderRadius: 4,
+                  fontSize: 11,
+                  fontWeight: 400,
+                  padding: '5px 11px',
+                }}
+              >
+                삭제
+              </button>
             </li>
           ))}
         </ul>

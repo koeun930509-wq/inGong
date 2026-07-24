@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import Header from './components/Header'
-import DateTimeSelector from './components/DateTimeSelector'
 import CongestionDetailCard from './components/CongestionDetailCard'
+import ParkingStatusCard from './components/ParkingStatusCard'
 import TerminalComparisonChart from './components/TerminalComparisonChart'
 import TerminalTrendChart from './components/TerminalTrendChart'
 import LoginButton from './components/LoginButton'
@@ -11,6 +11,7 @@ import {
   fetchCongestionByDate,
   getCongestionDetail,
 } from './services/congestionService'
+import { fetchParkingStatus } from './services/parkingService'
 import { listFavorites, addFavorite, deleteFavorite } from './services/favoritesService'
 import { signIn, signUp, signOut, getCurrentUser, onAuthStateChange } from './services/authService'
 
@@ -43,6 +44,10 @@ export default function App() {
   const [favoritesError, setFavoritesError] = useState(null)
   const [congestionLoading, setCongestionLoading] = useState(true)
   const [congestionError, setCongestionError] = useState(null)
+  const [parkingRows, setParkingRows] = useState([])
+  const [parkingLoading, setParkingLoading] = useState(true)
+  const [parkingError, setParkingError] = useState(null)
+  const [showLoginModal, setShowLoginModal] = useState(false)
 
   async function loadCongestion(date) {
     setCongestionLoading(true)
@@ -57,8 +62,40 @@ export default function App() {
     }
   }
 
+  async function loadParking() {
+    setParkingLoading(true)
+    setParkingError(null)
+    try {
+      const nextRows = await fetchParkingStatus()
+      setParkingRows(nextRows)
+    } catch (err) {
+      setParkingError(err.message)
+    } finally {
+      setParkingLoading(false)
+    }
+  }
+
   useEffect(() => {
     loadCongestion(selectedDate)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDate])
+
+  useEffect(() => {
+    loadParking()
+    const intervalId = setInterval(loadParking, 60 * 1000)
+    return () => clearInterval(intervalId)
+  }, [])
+
+  useEffect(() => {
+    if (selectedDate !== 'today') return
+    const intervalId = setInterval(() => {
+      setSelectedTime((prev) => {
+        const currentSlot = getCurrentTimeSlot()
+        return prev === currentSlot ? prev : currentSlot
+      })
+      loadCongestion('today')
+    }, 5 * 60 * 1000)
+    return () => clearInterval(intervalId)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate])
 
@@ -104,6 +141,7 @@ export default function App() {
     try {
       const signedInUser = await signIn(email, password)
       setUser(signedInUser)
+      setShowLoginModal(false)
     } catch (err) {
       setAuthError(err.message)
     }
@@ -118,6 +156,7 @@ export default function App() {
         setAuthMessage('가입 확인 이메일을 보냈습니다. 이메일 인증 후 로그인해주세요.')
       } else {
         setUser(signedUpUser)
+        setShowLoginModal(false)
       }
     } catch (err) {
       setAuthError(err.message)
@@ -177,14 +216,21 @@ export default function App() {
         onRefresh={handleRefresh}
         darkMode={darkMode}
         onToggleDarkMode={() => setDarkMode((prev) => !prev)}
+        user={user}
+        onOpenLogin={() => setShowLoginModal(true)}
+        onSignOut={handleSignOut}
       />
 
-      <DateTimeSelector
-        selectedDate={selectedDate}
-        onSelectDate={handleRefresh}
-        selectedTime={selectedTime}
-        onSelectTime={setSelectedTime}
-      />
+      {!user && (
+        <LoginButton
+          open={showLoginModal}
+          onClose={() => setShowLoginModal(false)}
+          authError={authError}
+          authMessage={authMessage}
+          onSignIn={handleSignIn}
+          onSignUp={handleSignUp}
+        />
+      )}
 
       {congestionError && (
         <div className="card" style={{ marginBottom: 20 }}>
@@ -205,18 +251,12 @@ export default function App() {
           detailRows={detailRows}
           loading={congestionLoading}
           user={user}
+          favorites={favorites}
           onAddFavorite={handleAddFavorite}
+          onSelectDate={handleRefresh}
+          onSelectTime={setSelectedTime}
         />
       )}
-
-      <LoginButton
-        user={user}
-        authError={authError}
-        authMessage={authMessage}
-        onSignIn={handleSignIn}
-        onSignUp={handleSignUp}
-        onSignOut={handleSignOut}
-      />
 
       <FavoritesList
         user={user}
@@ -237,6 +277,13 @@ export default function App() {
           </>
         )
       )}
+
+      <ParkingStatusCard
+        parkingRows={parkingRows}
+        loading={parkingLoading}
+        error={parkingError}
+        onRetry={loadParking}
+      />
     </>
   )
 }

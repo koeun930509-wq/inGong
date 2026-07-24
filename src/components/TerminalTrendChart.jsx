@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   LineChart,
   Line,
@@ -9,6 +10,7 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import { formatTimeSlotLabel } from '../constants/congestion'
+import TerminalToggle from './TerminalToggle'
 
 // rows(선택한 날짜의 전체 시간대 행) -> [{ time, 'T1 입국장': value, 'T1 출국장': value, ... }, ...] 형태로 변환한다.
 function buildTrendChartData(rows) {
@@ -20,25 +22,40 @@ function buildTrendChartData(rows) {
   return Array.from(byTime.values())
 }
 
-const SERIES = [
-  { key: 'T1 입국장', color: 'var(--chart-t1)', dash: undefined },
-  { key: 'T1 출국장', color: 'var(--chart-t1)', dash: '6 4' },
-  { key: 'T2 입국장', color: 'var(--chart-t2)', dash: undefined },
-  { key: 'T2 출국장', color: 'var(--chart-t2)', dash: '6 4' },
-]
+const SERIES_BY_TERMINAL = {
+  T1: [
+    { key: 'T1 입국장', color: 'var(--chart-t1)' },
+    { key: 'T1 출국장', color: 'var(--chart-t2)' },
+  ],
+  T2: [
+    { key: 'T2 입국장', color: 'var(--chart-t1)' },
+    { key: 'T2 출국장', color: 'var(--chart-t2)' },
+  ],
+}
 
 export default function TerminalTrendChart({ rows }) {
+  const [selectedTerminal, setSelectedTerminal] = useState('T1')
   const chartData = buildTrendChartData(rows)
+  const series = SERIES_BY_TERMINAL[selectedTerminal]
 
   return (
     <section className="card" style={{ marginBottom: 20 }}>
-      <h2 style={{ fontSize: 16, marginTop: 0 }}>시간대별 혼잡도 추이</h2>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 12 }}>
+        <h2 style={{ fontSize: 16, margin: 0 }}>시간대별 혼잡도 추이</h2>
+        <TerminalToggle value={selectedTerminal} onChange={setSelectedTerminal} />
+      </div>
       <div style={{ width: '100%', height: 280 }}>
         <ResponsiveContainer>
           <LineChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-            <XAxis dataKey="time" tickFormatter={formatTimeSlotLabel} stroke="var(--muted)" />
-            <YAxis stroke="var(--muted)" />
+            <CartesianGrid vertical={false} stroke="var(--border)" />
+            <XAxis
+              dataKey="time"
+              tickFormatter={formatTimeSlotLabel}
+              stroke="var(--muted)"
+              tickLine={false}
+              axisLine={false}
+            />
+            <YAxis stroke="var(--muted)" tickLine={false} axisLine={false} />
             <Tooltip
               labelFormatter={formatTimeSlotLabel}
               contentStyle={{
@@ -50,22 +67,22 @@ export default function TerminalTrendChart({ rows }) {
               itemStyle={{ color: 'var(--text)' }}
             />
             <Legend wrapperStyle={{ color: 'var(--text)' }} />
-            {SERIES.map(({ key, color, dash }) => (
+            {series.map(({ key, color }) => (
               <Line
                 key={key}
+                type="monotone"
                 dataKey={key}
                 stroke={color}
-                strokeWidth={2}
-                strokeDasharray={dash}
-                dot={{ r: 4, strokeWidth: 2, stroke: 'var(--surface)' }}
-                activeDot={{ r: 6, strokeWidth: 2, stroke: 'var(--surface)' }}
+                strokeWidth={2.5}
+                dot={false}
+                activeDot={{ r: 5, strokeWidth: 2, stroke: 'var(--surface)' }}
               />
             ))}
           </LineChart>
         </ResponsiveContainer>
       </div>
       <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 0 }}>
-        선택한 날짜의 시간대별(<code>time</code>) 터미널 × 구역 <code>value</code>(인원수, 명) 변화를 선(색상: 터미널, 실선/점선: 구역)으로 보여줍니다.
+        선택한 날짜·터미널의 시간대별(<code>time</code>) 구역(입국장/출국장) <code>value</code>(인원수, 명) 변화를 보여줍니다.
       </p>
     </section>
   )
